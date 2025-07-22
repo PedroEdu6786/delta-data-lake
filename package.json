@@ -1,0 +1,12 @@
+{
+  "name": "arkham-project",
+  "version": "0.0.1",
+  "description": "",
+  "author": "",
+  "private": true,
+  "license": "UNLICENSED",
+  "scripts": {
+    "docker:up": "docker-compose up -d --build",
+    "docker:down": "docker-compose down"
+  }
+}

@@ -6,7 +6,7 @@ import { typeOrmConfig } from './commons/configs/typeorm.config';
 import { ConfigModule } from '@nestjs/config';
 import { UsersModule } from './users/users.module';
 import { PermissionsModule } from './permissions/permissions.module';
-import { AuthModule } from './auth/auth.module';
+import { LocalAuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -17,7 +17,7 @@ import { AuthModule } from './auth/auth.module';
     typeOrmConfig,
     UsersModule,
     PermissionsModule,
-    AuthModule,
+    LocalAuthModule,
   ],
   controllers: [AppController, PermissionsController],
   providers: [AppService],

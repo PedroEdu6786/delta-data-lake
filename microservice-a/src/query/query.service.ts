@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { SqlParserService } from 'src/sql-parser/sql-parser.service';
 import { QUERY_ENGINE, QueryEngine } from './types/query-engine.interface';
+import { SqlParserService } from '../sql-parser/sql-parser.service';
 
 @Injectable()
 export class QueryService {
@@ -14,7 +14,7 @@ export class QueryService {
   async runQuery(sql: string, page: number, limit: number) {
     // const tables = this.sqlParser.extractTableNames(sql);
 
-    // const allowed = await this.permissionService.checkAccess(userId, tables);
+    const allowed = await this.permissionService.checkAccess(userId, tables);
     // if (!allowed) throw new ForbiddenException();
 
     // const cached = await this.cacheService.get(sql, userId);

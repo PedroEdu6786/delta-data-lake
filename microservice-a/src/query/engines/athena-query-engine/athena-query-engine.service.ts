@@ -6,12 +6,15 @@ import {
   StartQueryExecutionCommand,
 } from '@aws-sdk/client-athena';
 import { Injectable } from '@nestjs/common';
-import { QueryEngine } from 'src/query/types/query-engine.interface';
 import { GetTableCommand, GlueClient } from '@aws-sdk/client-glue';
-import { getErrorMessage, isError } from 'src/commons/helpers';
 // import { AwsClientBuilder } from 'src/aws/aws-client-builder';
-import { unfoldTokens } from 'src/aws/unfold-tokens';
 import { fromIni } from '@aws-sdk/credential-provider-ini';
+import { QueryEngine } from '../../types/query-engine.interface';
+import {
+  getErrorMessage,
+  isError,
+} from '../../../commons/helpers/error.helper';
+import { unfoldTokens } from 'src/aws/unfold-tokens';
 
 const database = 'arkham_query';
 

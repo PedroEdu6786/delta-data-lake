@@ -1,9 +1,10 @@
 import { Module } from '@nestjs/common';
 import { QueryController } from './query.controller';
-import { SqlParserService } from 'src/sql-parser/sql-parser.service';
+
 import { QueryService } from './query.service';
 import { AthenaQueryEngineService } from './engines/athena-query-engine/athena-query-engine.service';
 import { QUERY_ENGINE } from './types/query-engine.interface';
+import { SqlParserService } from '../sql-parser/sql-parser.service';
 
 @Module({
   imports: [],

@@ -1,7 +1,6 @@
 import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
-import { firstValueFrom, Observable } from 'rxjs';
-import { AxiosResponse } from 'axios';
+import { firstValueFrom } from 'rxjs';
 
 interface PermissionCheckResponse {
   allowed: boolean;
@@ -13,21 +12,21 @@ export class PermissionsService {
   constructor(private readonly httpService: HttpService) {}
 
   async checkAccess(
-    userId: string,
+    token: string,
     tables: string[],
   ): Promise<PermissionCheckResponse> {
     try {
       const response = await firstValueFrom(
         this.httpService.post<PermissionCheckResponse>(
           'http://localhost:3001/permissions/check',
-          { userId, tables },
+          { tables },
           {
             headers: {
-              Authorization: `Bearer ${this.getUserToken(userId)}`,
+              Authorization: `Bearer ${token}`,
               'Content-Type': 'application/json',
             },
           },
-        ) as Observable<AxiosResponse<PermissionCheckResponse>>,
+        ),
       );
 
       return response.data;
@@ -38,11 +37,5 @@ export class PermissionsService {
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
-  }
-
-  private getUserToken(userId: string): string {
-    // Implement logic to get/generate JWT token for the user
-    // This might involve calling your auth service or using a service account token
-    throw new Error('getUserToken not implemented');
   }
 }

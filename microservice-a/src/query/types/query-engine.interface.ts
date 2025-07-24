@@ -1,5 +1,10 @@
 export interface QueryEngine {
-  runQuery(query: string, page: number, limit: number): Promise<object>;
+  runQuery(
+    query: string,
+    tableName: string,
+    page: number,
+    limit: number,
+  ): Promise<object>;
   getTableNames(query: string): string[]; // useful for permission checking
 }
 

@@ -1,0 +1,6 @@
+aws:
+  athena:
+    database: arkham_query
+    s3OutputLocation: s3://pedro-arkham-athena-query/results/
+  region: us-east-1
+  profile: personal

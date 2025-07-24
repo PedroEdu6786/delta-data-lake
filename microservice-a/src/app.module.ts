@@ -3,11 +3,11 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { QueryModule } from './query/query.module';
 import { AuthModule } from '@arkham/auth';
-import { PermissionsService } from './permissions/permissions.service';
+import { PermissionsModule } from './permissions/permissions.module';
 
 @Module({
-  imports: [QueryModule, AuthModule],
+  imports: [QueryModule, AuthModule, PermissionsModule],
   controllers: [AppController],
-  providers: [AppService, PermissionsService],
+  providers: [AppService],
 })
 export class AppModule {}

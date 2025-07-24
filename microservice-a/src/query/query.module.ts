@@ -5,9 +5,10 @@ import { QueryService } from './query.service';
 import { AthenaQueryEngineService } from './engines/athena-query-engine/athena-query-engine.service';
 import { QUERY_ENGINE } from './types/query-engine.interface';
 import { SqlParserService } from '../sql-parser/sql-parser.service';
+import { PermissionsModule } from 'src/permissions/permissions.module';
 
 @Module({
-  imports: [],
+  imports: [PermissionsModule],
   controllers: [QueryController],
   providers: [
     QueryService,

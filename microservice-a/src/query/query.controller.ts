@@ -1,7 +1,8 @@
-import { Controller, Get, Query, Request, UseGuards } from '@nestjs/common';
+import { Controller, Get, Query, UseGuards } from '@nestjs/common';
 import { QueryService } from './query.service';
 import { AuditorRoute } from './query.routes';
 import { JwtAuthGuard } from '@arkham/auth';
+import { AuthToken } from 'src/common/decorators/auth-token.decorator';
 
 @Controller('query')
 export class QueryController {
@@ -9,8 +10,8 @@ export class QueryController {
 
   @Get(AuditorRoute.QUERY)
   @UseGuards(JwtAuthGuard)
-  async executeQuery(@Request() req: any, @Query('q') sql: string) {
-    const result = await this.queryService.runQuery(sql, 1, 10);
+  async executeQuery(@AuthToken() token: string, @Query('q') sql: string) {
+    const result = await this.queryService.runQuery(token, sql, 1, 1);
     return { result };
   }
 }

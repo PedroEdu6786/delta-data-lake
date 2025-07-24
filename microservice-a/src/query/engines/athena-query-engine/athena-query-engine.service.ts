@@ -5,29 +5,35 @@ import {
   Row,
   StartQueryExecutionCommand,
 } from '@aws-sdk/client-athena';
-import { Injectable } from '@nestjs/common';
-import { GetTableCommand, GlueClient } from '@aws-sdk/client-glue';
-// import { AwsClientBuilder } from 'src/aws/aws-client-builder';
-import { fromIni } from '@aws-sdk/credential-provider-ini';
-import { QueryEngine } from '../../types/query-engine.interface';
 import {
-  getErrorMessage,
-  isError,
-} from '../../../commons/helpers/error.helper';
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import { GetTableCommand, GlueClient } from '@aws-sdk/client-glue';
+import { fromIni } from '@aws-sdk/credential-provider-ini';
+import config from 'config';
+import { QueryEngine } from '../../types/query-engine.interface';
 import { unfoldTokens } from 'src/aws/unfold-tokens';
-
-const database = 'arkham_query';
+import { getErrorMessage, isError } from 'src/commons/helpers';
 
 @Injectable()
 export class AthenaQueryEngineService implements QueryEngine {
+  private readonly athenaDatabase = config.get<string>('aws.athena.database');
+  private readonly s3OutputLocation = config.get<string>(
+    'aws.athena.s3OutputLocation',
+  );
+  private readonly awsRegion = config.get<string>('aws.region');
+  private readonly awsProfile = config.get<string>('aws.profile');
+
   private athenaClient = new AthenaClient({
-    region: 'us-east-1',
-    credentials: fromIni({ profile: 'personal' }),
+    region: this.awsRegion,
+    credentials: fromIni({ profile: this.awsProfile }),
   });
 
   private glueClient = new GlueClient({
-    region: 'us-east-1',
-    credentials: fromIni({ profile: 'personal' }),
+    region: this.awsRegion,
+    credentials: fromIni({ profile: this.awsProfile }),
   });
   constructor() {
     // private readonly glueClient: GlueClient, // private readonly athenaClient: AthenaClient, // private readonly awsClientBuilder: AwsClientBuilder,
@@ -39,24 +45,24 @@ export class AthenaQueryEngineService implements QueryEngine {
     throw new Error('Method not implemented.');
   }
 
-  async validateTableExists(
+  private async validateTableExists(
     database: string,
     tableName: string,
   ): Promise<void> {
     try {
       await this.glueClient.send(
         new GetTableCommand({
-          DatabaseName: database,
+          DatabaseName: this.athenaDatabase,
           Name: tableName,
         }),
       );
     } catch (error: unknown) {
       if (isError(error)) {
-        throw new Error(
-          `Table "${tableName}" does not exist in database "${database}".`,
-        );
+        throw new NotFoundException(`Table "${tableName}" does not exist`);
       }
-      throw new Error(`Error validating table: ${getErrorMessage(error)}`);
+      throw new BadRequestException(
+        `Error validating table: ${getErrorMessage(error)}`,
+      );
     }
   }
 
@@ -86,34 +92,29 @@ export class AthenaQueryEngineService implements QueryEngine {
     `;
   }
 
-  async runQuery(query: string, page: number, limit: number): Promise<any> {
+  async runQuery(
+    query: string,
+    tableName: string,
+    page: number,
+    limit: number,
+  ): Promise<any> {
     try {
-      const match = query.match(/from\s+(?:\w+\.)?(\w+)/i);
-      const tableName = match?.[1];
-
-      if (!tableName) {
-        throw new Error('Could not determine table name from query.');
-      }
-
-      await this.validateTableExists(database, tableName);
-
-      // const paginatedQuery = this.addPaginationToQuery(
-      //   decodeURIComponent(query),
-      //   page,
-      //   limit,
-      // );
+      await this.validateTableExists(this.athenaDatabase, tableName);
 
       const start = await this.athenaClient.send(
         new StartQueryExecutionCommand({
           QueryString: query,
-          QueryExecutionContext: { Database: 'arkham_query' },
+          QueryExecutionContext: { Database: this.athenaDatabase },
           ResultConfiguration: {
-            OutputLocation: 's3://pedro-arkham-athena-query/results/',
+            OutputLocation: this.s3OutputLocation,
           },
         }),
       );
 
       const queryId = start.QueryExecutionId;
+      if (!queryId) {
+        throw new Error('Failed to get query execution ID from Athena');
+      }
 
       // Poll status
       let status = 'QUEUED';
@@ -127,7 +128,8 @@ export class AthenaQueryEngineService implements QueryEngine {
         status = state.QueryExecution?.Status?.State || 'FAILED';
 
         if (status === 'FAILED') {
-          throw new Error('Athena query failed');
+          const reason = state.QueryExecution?.Status?.StateChangeReason;
+          throw new Error(`Athena query failed: ${reason || 'Unknown error'}`);
         }
       }
 
@@ -156,40 +158,12 @@ export class AthenaQueryEngineService implements QueryEngine {
           total: data.length,
         },
       };
-    } catch (error) {
-      console.log(error);
-      throw error;
+    } catch (error: unknown) {
+      if (isError(error)) {
+        throw new Error(`Query execution failed: ${error.message}`);
+      }
+      throw new Error(`Query execution failed: ${getErrorMessage(error)}`);
     }
-  }
-
-  async fetchQueryResultsPaginated(
-    queryExecutionId: string,
-    nextToken?: string,
-  ) {
-    const result = await this.athenaClient.send(
-      new GetQueryResultsCommand({
-        QueryExecutionId: queryExecutionId,
-        MaxResults: 1, // Optional: use to limit per page size
-        ...(nextToken ? { NextToken: nextToken } : {}),
-      }),
-    );
-
-    const rows = result.ResultSet?.Rows ?? [];
-    const headers = rows[0].Data?.map((d) => d.VarCharValue);
-    const dataRows = rows.slice(1).map((row) => {
-      const obj: Record<string, string> = {};
-      row.Data?.forEach((cell, index) => {
-        if (headers && headers[index]) {
-          obj[headers[index]] = cell.VarCharValue || '';
-        }
-      });
-      return obj;
-    });
-
-    return {
-      data: dataRows,
-      nextToken: result.NextToken,
-    };
   }
 
   private parseAthenaResults(results: Row[]): Record<string, string>[] {

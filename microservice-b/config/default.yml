@@ -2,8 +2,8 @@ server:
   port: 3001
 
 database:
-  host: localhost
+  host: mysql
   port: 3306
   user: root
-  password: ''
+  password: root
   name: catalog_db

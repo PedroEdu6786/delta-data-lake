@@ -10,7 +10,7 @@ COPY libs ./libs
 
 RUN yarn install --frozen-lockfile
 
-WORKDIR /app/microservice-a
+WORKDIR /app/microservice-b
 RUN yarn build
 
 CMD ["node", "dist/main.js"]

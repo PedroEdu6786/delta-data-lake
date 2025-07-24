@@ -1,6 +1,8 @@
 import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
-import { firstValueFrom } from 'rxjs';
+
+import config from 'config';
+import { GenericHttpClient } from 'src/commons/helpers/http.client';
 
 interface PermissionCheckResponse {
   allowed: boolean;
@@ -9,31 +11,32 @@ interface PermissionCheckResponse {
 
 @Injectable()
 export class PermissionsService {
-  constructor(private readonly httpService: HttpService) {}
+  private readonly httpClient: GenericHttpClient;
+
+  constructor(private readonly httpService: HttpService) {
+    const baseUrl = config.get<string>('permissions.serviceUrl');
+    const timeout = config.get<number>('permissions.timeout');
+
+    this.httpClient = new GenericHttpClient(this.httpService, baseUrl, timeout);
+  }
 
   async checkAccess(
     token: string,
     tables: string[],
   ): Promise<PermissionCheckResponse> {
     try {
-      const response = await firstValueFrom(
-        this.httpService.post<PermissionCheckResponse>(
-          'http://localhost:3001/permissions/check',
-          { tables },
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              'Content-Type': 'application/json',
-            },
+      return this.httpClient.post<PermissionCheckResponse>(
+        '/permissions/check',
+        { tables },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
           },
-        ),
+        },
       );
-
-      return response.data;
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    } catch (error) {
+    } catch {
       throw new HttpException(
-        'Failed to check permissions',
+        'Permission check failed',
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }

@@ -4,3 +4,7 @@ aws:
     s3OutputLocation: s3://pedro-arkham-athena-query/results/
   region: us-east-1
   profile: personal
+
+permissions:
+  serviceUrl: http://localhost:3001
+  timeout: 5000

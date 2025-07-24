@@ -1,25 +1,19 @@
 import { Body, Controller, Post, Request, UseGuards } from '@nestjs/common';
 import { PermissionsService } from './permissions.service';
 import { JwtAuthGuard } from '@arkham/auth';
-
-interface User {
-  userId: string;
-  email: string;
-}
-
-interface AuthenticatedRequest {
-  user: User; // replace with your actual User type
-}
+import { PermissionsRoute } from './permissions.routes';
+import { PermissionsCheckRequestDto } from './dto/permissions-check-request.dto';
+import { AuthenticatedRequest } from '../auth/types/auth.types';
 
 @Controller('permissions')
 export class PermissionsController {
   constructor(private readonly permissionsService: PermissionsService) {}
 
-  @Post('check')
+  @Post(PermissionsRoute.CHECK)
   @UseGuards(JwtAuthGuard)
   check(
     @Request() req: AuthenticatedRequest,
-    @Body() dto: { tables: string[] },
+    @Body() dto: PermissionsCheckRequestDto,
   ) {
     return this.permissionsService.checkAccess(req.user.userId, dto.tables);
   }

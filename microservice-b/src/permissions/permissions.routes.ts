@@ -1,3 +1,3 @@
 export enum PermissionsRoute {
-  ACCESS = '/access',
+  CHECK = '/check',
 }

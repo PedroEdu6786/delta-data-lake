@@ -1,5 +1,7 @@
 import { AST, Parser } from 'node-sql-parser';
 import { TableExtractor } from '../interfaces/table-extractor.interface';
+import { BadRequestException } from '@nestjs/common';
+import { getErrorMessage } from 'src/commons/helpers';
 
 export class AstTableExtractor implements TableExtractor {
   private readonly dialects = ['postgresql', 'mysql'];
@@ -9,6 +11,7 @@ export class AstTableExtractor implements TableExtractor {
     let ast: AST | AST[] | null = null;
     let lastError: unknown;
 
+    // Test out multiple dialects until it founds the appropriate one
     for (const dialect of this.dialects) {
       try {
         ast = parser.astify(sql, { database: dialect });
@@ -20,7 +23,12 @@ export class AstTableExtractor implements TableExtractor {
     }
 
     if (!ast || lastError) {
-      throw new Error(`Failed to parse SQL for all dialects`);
+      throw new BadRequestException({
+        message: 'Invalid SQL query',
+        details: getErrorMessage(lastError),
+        suggestion:
+          'Review your SQL syntax. Check for missing commas, parentheses, or keywords.',
+      });
     }
 
     return this.extractTablesFromAst(ast);

@@ -13,7 +13,6 @@ def to_trino_compatible(sql: str) -> str:
     for dialect in DIALECTS:
         try:
             result = transpile(sql, read=dialect, write='trino')
-            print(f"Detected dialect: {dialect}", file=sys.stderr)  # DEBUG only
             return result[0]  # Return the first converted result
         except errors.ParseError:
             continue

@@ -17,7 +17,7 @@ export class SqlParserService {
     return this.sqlTranspiler.toTrino(sql);
   }
 
-  addPaginationToSql(query: string, limit: number, offset: number): string {
-    return this.sqlPaginator.addPaginationToSql(query, limit, offset);
+  addPaginationToSql(query: string, page: number, number: number): string {
+    return this.sqlPaginator.addPaginationToSql(query, page, number);
   }
 }

@@ -1,49 +1,30 @@
-import { AST, Parser } from 'node-sql-parser';
 import { SqlPaginator } from '../interfaces/sql-paginator.interface';
 
 export class NodeSqlPaginator implements SqlPaginator {
-  private readonly parser = new Parser();
-  private readonly dialect = 'hive';
-
-  addPaginationToSql(query: string, limit: number, offset: number): string {
-    const ast = this.parseQuery(query);
-    this.validateSelectQuery(ast);
-    this.addLimitOffset(ast, limit, offset);
-
-    const sql = this.parser.sqlify(ast, { database: this.dialect });
-    return sql.endsWith(';') ? sql : sql + ';';
+  private removePaginationFromQuery(query: string): string {
+    // Remove existing LIMIT and OFFSET clauses (case insensitive)
+    return query
+      .replace(/\s+LIMIT\s+\d+/gi, '')
+      .replace(/\s+OFFSET\s+\d+/gi, '')
+      .trim();
   }
 
-  private parseQuery(query: string): AST {
-    try {
-      let ast = this.parser.astify(query, { database: this.dialect });
+  addPaginationToSql(query: string, page: number, limit: number): string {
+    const offset = (page - 1) * limit;
+    const cleaned = query.trim().replace(/;$/, '');
+    const cleanedQuery = this.removePaginationFromQuery(cleaned);
 
-      if (Array.isArray(ast)) {
-        if (ast.length !== 1) {
-          throw new Error('Only single SELECT queries are supported.');
-        }
-        ast = ast[0];
-      }
+    const start = offset + 1;
+    const end = offset + limit;
 
-      return ast;
-    } catch {
-      throw new Error(`Invalid SQL`);
-    }
-  }
-
-  private validateSelectQuery(ast: AST): void {
-    if (ast.type !== 'select') {
-      throw new Error('Only SELECT queries can be paginated.');
-    }
-  }
-
-  private addLimitOffset(ast: AST, limit: number, offset: number): void {
-    ast['limit'] = {
-      seperator: ' OFFSET',
-      value: [
-        { type: 'number', value: limit },
-        { type: 'number', value: offset },
-      ],
-    };
+    return `
+      SELECT * FROM (
+        SELECT *, ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) AS row_num
+        FROM (
+          ${cleanedQuery}
+        ) AS inner_query
+      ) AS numbered
+      WHERE row_num >= ${start} AND row_num <= ${end};
+    `;
   }
 }

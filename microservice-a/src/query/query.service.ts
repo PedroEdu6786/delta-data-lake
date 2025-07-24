@@ -67,10 +67,7 @@ export class QueryService {
     }
   }
 
-  private async executeQuery(
-    query: string,
-    tableName: string,
-  ): Promise<object> {
+  private executeQuery(query: string, tableName: string) {
     try {
       return this.queryEngine.runQuery(query, tableName);
     } catch (error) {

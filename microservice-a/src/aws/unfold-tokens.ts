@@ -1,6 +1,4 @@
-type PaginateWithTokenFunction<TResult = unknown> = (
-  token?: string,
-) => Promise<{
+type PaginateWithTokenFunction<TResult = any> = (token?: string) => Promise<{
   elements: TResult[];
   nextToken?: string;
 }>;
@@ -8,17 +6,41 @@ type PaginateWithTokenFunction<TResult = unknown> = (
 type ExtractPaginateWithTokenResult<T> =
   T extends PaginateWithTokenFunction<infer R> ? R : never;
 
-export async function unfoldTokens<TFn extends PaginateWithTokenFunction>(
-  asyncFn: TFn,
-): Promise<ExtractPaginateWithTokenResult<TFn>[]> {
-  const allElements: ExtractPaginateWithTokenResult<TFn>[] = [];
-  let nextToken: string | undefined = undefined;
+const END = Symbol('END');
 
+const unfold = async function* <TState, TValue>(
+  generator: (state: TState) => Promise<[TValue[], TState] | undefined>,
+  state: TState,
+) {
   do {
-    const { elements, nextToken: token } = await asyncFn(nextToken);
-    allElements.push(...(elements as ExtractPaginateWithTokenResult<TFn>[]));
-    nextToken = token;
-  } while (nextToken);
+    const result = await generator(state);
+    if (result === undefined) {
+      break;
+    }
+    const [value, newState] = result;
+    yield* value;
+    state = newState;
+  } while (true);
+};
 
-  return allElements;
+export function unfoldTokens<TFn extends PaginateWithTokenFunction>(
+  asyncFn: TFn,
+): AsyncGenerator<ExtractPaginateWithTokenResult<TFn>> {
+  return unfold<
+    typeof END | null | undefined | string,
+    ExtractPaginateWithTokenResult<TFn>
+  >(
+    async (token) => {
+      if (!token) {
+        return;
+      }
+
+      const { elements, nextToken } = await asyncFn(
+        token === END ? undefined : token,
+      );
+
+      return [elements, nextToken];
+    },
+    END as typeof END | null | undefined | string,
+  );
 }

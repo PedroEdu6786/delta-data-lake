@@ -38,7 +38,10 @@ export class AthenaQueryEngineService implements QueryEngine {
     throw new Error('Method not implemented.');
   }
 
-  async runQuery(query: string, tableName: string): Promise<any> {
+  async *runQuery(
+    query: string,
+    tableName: string,
+  ): AsyncGenerator<Record<string, any>, void> {
     try {
       const tableExists = await this.tableValidator.validateTableExists(
         this.athenaDatabase,
@@ -52,22 +55,23 @@ export class AthenaQueryEngineService implements QueryEngine {
       const queryId = await this.executeQuery(query);
       await this.waitForQueryCompletion(queryId);
 
-      const results = await this.getQueryResults(queryId);
-      const data = this.parseAthenaResults(results);
+      const results = this.getQueryResults(queryId);
+      const { headers, dataRows } = await this.separateHeadersFromData(results);
 
-      return {
-        data,
-      };
+      for await (const row of dataRows) {
+        const rowObj = this.parseAthenaResult(row, headers);
+        if (rowObj) {
+          yield rowObj;
+        }
+      }
     } catch (error: unknown) {
       const errorMessage = getErrorMessage(error);
 
-      // Check if it's an Athena-specific error
       if (errorMessage.includes('Athena query failed:')) {
         const athenaError = errorMessage.replace('Athena query failed: ', '');
         this.errorHandler.handleAthenaError(athenaError);
       }
 
-      // Re-throw other errors as-is
       throw error;
     }
   }
@@ -108,12 +112,12 @@ export class AthenaQueryEngineService implements QueryEngine {
     }
   }
 
-  private async getQueryResults(queryId: string): Promise<Row[]> {
-    return await unfoldTokens(async (nextToken) => {
+  private async *getQueryResults(queryId: string): AsyncGenerator<Row> {
+    yield* unfoldTokens(async (nextToken) => {
       const data = await this.athenaClient.send(
         new GetQueryResultsCommand({
           QueryExecutionId: queryId,
-          MaxResults: 100,
+          MaxResults: 5,
           ...(nextToken ? { NextToken: nextToken } : {}),
         }),
       );
@@ -125,24 +129,34 @@ export class AthenaQueryEngineService implements QueryEngine {
     });
   }
 
-  private parseAthenaResults(results: Row[]): Record<string, string>[] {
-    if (!results || results.length < 2) return [];
+  private async separateHeadersFromData(
+    results: AsyncGenerator<Row>,
+  ): Promise<{ headers: string[]; dataRows: AsyncGenerator<Row> }> {
+    const firstRow = await results.next();
+    if (firstRow.done) {
+      throw new Error('No data returned from Athena query');
+    }
 
-    const headers = results[0].Data?.map((d) => d.VarCharValue ?? '');
-    const dataRows = results.slice(1);
+    const headers =
+      firstRow.value?.Data?.map((d) => d.VarCharValue ?? '') || [];
+    const dataRows = results;
 
-    if (!headers) return [];
+    return { headers, dataRows };
+  }
 
-    return dataRows.map((row) => {
-      const values = row.Data?.map((d) => d.VarCharValue ?? '');
-      if (!values) return {};
-      return headers.reduce(
-        (acc, header, idx) => {
-          acc[header] = values[idx];
-          return acc;
-        },
-        {} as Record<string, string>,
-      );
-    });
+  private parseAthenaResult(
+    row: Row,
+    headers: string[],
+  ): Record<string, any> | null {
+    const values = row?.Data?.map((d) => d.VarCharValue ?? null);
+    if (!values) return null;
+
+    return headers.reduce(
+      (acc, header, idx) => {
+        acc[header] = values[idx];
+        return acc;
+      },
+      {} as Record<string, any>,
+    );
   }
 }

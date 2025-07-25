@@ -50,10 +50,10 @@ export class StreamingResponseInterceptor implements NestInterceptor {
             isFirst = false;
           }
 
-          response.write(']');
+          response.write(']}]');
           response.end();
         } catch (err) {
-          response.write(']');
+          response.write(']}]');
           response.end();
           throw err;
         }

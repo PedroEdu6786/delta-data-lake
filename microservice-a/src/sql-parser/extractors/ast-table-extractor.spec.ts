@@ -122,5 +122,79 @@ describe('AstTableExtractor', () => {
 
       expect(result).toEqual(['nested_table', 'main_table']);
     });
+
+    it('should extract table names from queries with aliases', () => {
+      const mockAst = {
+        type: 'select',
+        from: [{ table: 'orders', as: 'o' }],
+        join: [{ table: 'users', as: 'u', on: {} }],
+      } as unknown as AST;
+      mockParser.astify.mockReturnValue(mockAst);
+
+      const result = extractor.extractTableNames(
+        'SELECT o.id, o.total, u.name FROM orders o JOIN users u ON o.userId = u.id',
+      );
+
+      expect(result).toEqual(['orders', 'users']);
+    });
+
+    it('should handle multiple table aliases in FROM clause', () => {
+      const mockAst = {
+        type: 'select',
+        from: [
+          { table: 'products', as: 'p' },
+          { table: 'categories', as: 'c' },
+        ],
+      } as unknown as AST;
+      mockParser.astify.mockReturnValue(mockAst);
+
+      const result = extractor.extractTableNames(
+        'SELECT p.name, c.title FROM products p, categories c',
+      );
+
+      expect(result).toEqual(['products', 'categories']);
+    });
+
+    it('should extract tables from complex JOIN queries with aliases', () => {
+      const mockAst = {
+        type: 'select',
+        from: [{ table: 'orders', as: 'o' }],
+        join: [
+          { table: 'users', as: 'u', on: {} },
+          { table: 'products', as: 'p', on: {} },
+          { table: 'order_items', as: 'oi', on: {} },
+        ],
+      } as unknown as AST;
+      mockParser.astify.mockReturnValue(mockAst);
+
+      const result = extractor.extractTableNames(
+        'SELECT o.id, u.name, p.title FROM orders o JOIN users u ON o.userId = u.id JOIN products p ON p.id = oi.productId JOIN order_items oi ON oi.orderId = o.id',
+      );
+
+      expect(result).toEqual(['orders', 'users', 'products', 'order_items']);
+    });
+
+    it('should handle subqueries with aliases', () => {
+      const mockAst = {
+        type: 'select',
+        from: [
+          {
+            type: 'subquery',
+            as: 'sub',
+            subquery: {
+              from: [{ table: 'user_stats', as: 'us' }],
+            },
+          },
+        ],
+        join: [{ table: 'users', as: 'u', on: {} }],
+      } as unknown as AST;
+      mockParser.astify.mockReturnValue(mockAst);
+
+      const result = extractor.extractTableNames(
+        'SELECT u.name, sub.total FROM (SELECT userId, SUM(amount) as total FROM user_stats us GROUP BY userId) sub JOIN users u ON u.id = sub.userId',
+      );
+
+      expect(result).toEqual(['user_stats', 'users']);
+    });
   });
 });

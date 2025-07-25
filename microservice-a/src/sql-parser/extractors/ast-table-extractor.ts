@@ -38,16 +38,20 @@ export class AstTableExtractor implements TableExtractor {
     const tables = new Set<string>();
 
     const walk = (node: unknown): void => {
-      if (!node || typeof node !== 'object') return;
+      if (!node || typeof node !== 'object' || 'column' in node) return;
 
-      if ('table' in node && typeof node.table === 'string') {
-        tables.add(node.table);
+      const obj = node as Record<string, unknown>;
+
+      // Handle nodes with a table and optional alias
+      if ('table' in obj && typeof obj.table === 'string') {
+        // This ensures we only add actual table names, not aliases
+        tables.add(obj.table);
       }
 
-      for (const key in node) {
-        if (Object.prototype.hasOwnProperty.call(node, key)) {
-          const value: unknown = node[key];
-
+      // Dive deeper into nested structures
+      for (const key in obj) {
+        if (Object.prototype.hasOwnProperty.call(obj, key)) {
+          const value = obj[key];
           if (Array.isArray(value)) {
             value.forEach(walk);
           } else if (typeof value === 'object' && value !== null) {

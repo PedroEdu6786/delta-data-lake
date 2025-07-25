@@ -38,7 +38,13 @@ export class AstTableExtractor implements TableExtractor {
     const tables = new Set<string>();
 
     const walk = (node: unknown): void => {
-      if (!node || typeof node !== 'object' || 'column' in node) return;
+      if (
+        !node ||
+        typeof node !== 'object' ||
+        'column' in node ||
+        'with' in node
+      )
+        return;
 
       const obj = node as Record<string, unknown>;
 

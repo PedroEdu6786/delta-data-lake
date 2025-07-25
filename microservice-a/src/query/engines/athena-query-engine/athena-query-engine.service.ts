@@ -38,10 +38,6 @@ export class AthenaQueryEngineService implements QueryEngine {
     this.athenaClient = this.awsClientFactory.createAthenaClient();
   }
 
-  getTableNames(): string[] {
-    throw new Error('Method not implemented.');
-  }
-
   async *runQuery(
     query: string,
     tableName: string[],

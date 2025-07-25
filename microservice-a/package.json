@@ -38,11 +38,13 @@
     "child_process": "^1.0.2",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.2",
+    "nest-winston": "^1.10.2",
     "node-sql-parser": "^5.3.10",
     "redis": "^5.6.0",
     "reflect-metadata": "^0.2.2",
     "sql-formatter": "^15.6.6",
-    "swagger-ui-express": "^5.0.1"
+    "swagger-ui-express": "^5.0.1",
+    "winston": "^3.17.0"
   },
   "devDependencies": {
     "@aws-sdk/types": "^3.840.0",

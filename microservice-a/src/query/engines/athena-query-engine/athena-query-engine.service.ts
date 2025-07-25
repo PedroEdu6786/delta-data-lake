@@ -7,6 +7,7 @@ import {
 } from '@aws-sdk/client-athena';
 import {
   BadRequestException,
+  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -17,6 +18,8 @@ import { AwsClientFactory } from './factories/aws-client.factory';
 import { TableValidatorService } from './services/table-validator.service';
 import config from 'config';
 import { AthenaErrorHandlerService } from './services/athena-error-handler.service';
+import { Logger } from 'winston';
+import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 
 @Injectable()
 export class AthenaQueryEngineService implements QueryEngine {
@@ -30,6 +33,7 @@ export class AthenaQueryEngineService implements QueryEngine {
     private readonly awsClientFactory: AwsClientFactory,
     private readonly tableValidator: TableValidatorService,
     private readonly errorHandler: AthenaErrorHandlerService,
+    @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
   ) {
     this.athenaClient = this.awsClientFactory.createAthenaClient();
   }
@@ -66,6 +70,9 @@ export class AthenaQueryEngineService implements QueryEngine {
       }
     } catch (error: unknown) {
       const errorMessage = getErrorMessage(error);
+      this.logger.error('Athena query execution failed', {
+        error: errorMessage,
+      });
 
       if (errorMessage.includes('Athena query failed:')) {
         const athenaError = errorMessage.replace('Athena query failed: ', '');
@@ -89,6 +96,9 @@ export class AthenaQueryEngineService implements QueryEngine {
 
     const queryId = start.QueryExecutionId;
     if (!queryId) {
+      this.logger.error('Athena query execution failed', {
+        error: 'Failed to get query execution ID from Athena',
+      });
       throw new BadRequestException(
         'Failed to get query execution ID from Athena',
       );

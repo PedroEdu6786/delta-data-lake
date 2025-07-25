@@ -42,6 +42,10 @@ Technology of choice due to familiarity to it, removes complexity on authenticat
 
 ## Getting Started
 
+### Assumptions
+- Tables on data lake are added to the `tables` for permission management. All tables by default are not accessible
+- Queries passed to the microservice-a are URLEncoded
+
 ### Prerequisites
 - Node.js 22.16.0+
 - MySql
@@ -82,6 +86,9 @@ yarn start:b
 
 # Start all services (Optional)
 yarn start:all
+
+# /microservices-b to seed users and tables and permissions
+yarn seed
 ```
 
 ### Environment Variables

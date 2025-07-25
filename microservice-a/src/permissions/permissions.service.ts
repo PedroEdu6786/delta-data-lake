@@ -1,8 +1,11 @@
-import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
+import { Injectable, HttpException, HttpStatus, Inject } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
+import { Logger } from 'winston';
+import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 
 import config from 'config';
 import { GenericHttpClient } from 'src/commons/helpers/http.client';
+import { getErrorMessage } from 'src/commons/helpers';
 
 interface PermissionCheckResponse {
   allowed: boolean;
@@ -13,7 +16,10 @@ interface PermissionCheckResponse {
 export class PermissionsService {
   private readonly httpClient: GenericHttpClient;
 
-  constructor(private readonly httpService: HttpService) {
+  constructor(
+    private readonly httpService: HttpService,
+    @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
+  ) {
     const baseUrl = config.get<string>('permissions.serviceUrl');
     const timeout = config.get<number>('permissions.timeout');
 
@@ -25,7 +31,7 @@ export class PermissionsService {
     tables: string[],
   ): Promise<PermissionCheckResponse> {
     try {
-      return this.httpClient.post<PermissionCheckResponse>(
+      const response = await this.httpClient.post<PermissionCheckResponse>(
         '/permissions/check',
         { tables },
         {
@@ -34,7 +40,12 @@ export class PermissionsService {
           },
         },
       );
-    } catch {
+
+      return response;
+    } catch (error) {
+      this.logger.error('Permission check failed', {
+        error: getErrorMessage(error),
+      });
       throw new HttpException(
         'Permission check failed',
         HttpStatus.INTERNAL_SERVER_ERROR,

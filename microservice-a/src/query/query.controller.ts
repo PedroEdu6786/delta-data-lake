@@ -10,9 +10,9 @@ import { AuditorRoute } from './query.routes';
 import { JwtAuthGuard } from '@arkham/auth';
 import { AuthToken } from 'src/commons/decorators/auth-token.decorator';
 import { QueryRequestDto } from './dto/query-request.dto';
-import { StreamingResponseInterceptor } from 'src/commons/interceptors/streaming-response.interceptor';
 import { StreamingJsonArray } from 'src/commons/decorators/streaming-json-array.decorator';
 import { ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { StreamingResponseInterceptor } from 'src/commons/interceptors/streaming-response.interceptor';
 
 @Controller('query')
 @UseInterceptors(StreamingResponseInterceptor)

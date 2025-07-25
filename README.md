@@ -23,21 +23,16 @@ This project consists of two microservices:
 - **Improvements**: Migrate entirely to python for query parsing/validations, add support for more SQL dialects, add support for more complex queries (UNIONS, JOINS, etc.)
 
 ### 3. Nestjs
-Technology of choice due to familiarity to it, removes complexity on authentication management, easy to scale and maintain.
+Technology of choice due to **familiarity** to it, removes complexity on authentication management, easy to scale and maintain.
 - **Improvements**: Migrate to Fastify due to easiness on query management implementations.
   
 ### 4. AWS
 - **Performance**: Left MaxResults for Athena as 5 so the stream is more visible with less data.
-
-## Challenge Aspects Addressed
-
-### 1. Microservices Communication
-- **Solution**: HTTP-based REST API calls between services
-- **Benefits**: Simple, well-understood protocol with built-in error handling
-
-### 2. Authentication & Authorization
-- **Solution**: JWT tokens with role-based permissions
-- **Benefits**: Stateless, scalable, and secure
+- 
+### 5. Cache and Kafka
+This wasn't part of my implementation due to time availability on my part, but felt like I should mentioned it since it's a very straight forward implementation.
+- **Cache**: This would've been easily implemented using Redis or any other cache solution on microservice-a to store the current user permission's tables, so it doesn't need to query the database every time.
+- **Kafka**: This could've been added on both microservices, for microservice-b would've required an endpoint to update a user's access permissions to a table and emit an event into kafka, and microservice-a would've subscribed to that topic to update it's cache and invalidate it's cache. Making the next request require to query the DB and check if the user has access to the tables. 
 
 ## Getting Started
 

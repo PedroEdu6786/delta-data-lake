@@ -1,4 +1,4 @@
-import { PythonScriptExecutor } from 'src/commons/helpers/python-script-executor';
+import { PythonScriptExecutor } from '../../commons/helpers/python-script-executor';
 import { SqlTranspiler } from '../interfaces/sql-transpiler.interface';
 
 export class PythonSqlTranspiler implements SqlTranspiler {

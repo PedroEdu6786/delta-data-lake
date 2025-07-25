@@ -1,7 +1,7 @@
 import { AST, Parser } from 'node-sql-parser';
 import { TableExtractor } from '../interfaces/table-extractor.interface';
 import { BadRequestException } from '@nestjs/common';
-import { getErrorMessage } from 'src/commons/helpers';
+import { getErrorMessage } from '../../commons/helpers';
 
 export class AstTableExtractor implements TableExtractor {
   private readonly dialects = ['postgresql', 'mysql'];

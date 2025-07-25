@@ -93,7 +93,19 @@ yarn seed
 
 ### Microservice B (Port 3001)
 - `POST /auth/login` - User authentication
+  - **Body**: `{ "email": "string", "password": "string" }`
+  - **Response**: `{ "access_token": "string" }`
+
 - `POST /permissions/check` - Get user permissions for tables (protected)
+  - **Headers**: `Authorization: Bearer <token>`
+  - **Body**: `{ "tables": ["string"] }`
+  - **Response**: `{ "allowed": boolean, "deniedTables": ["string"] }`
 
 ### Microservice A (Port 3000)
-- `GET /query` - Check table permissions (protected)
+- `GET /query` - Execute SQL query (protected)
+  - **Headers**: `Authorization: Bearer <token>`
+  - **Query Params**: 
+    - `q` (required): URL-encoded SQL query string
+    - `page` (optional): Page number (default: 1)
+    - `limit` (optional): Items per page (default: 50)
+  - **Response**: Streaming JSON array with query results

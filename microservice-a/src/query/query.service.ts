@@ -21,8 +21,7 @@ export class QueryService {
   ) {}
 
   async runQuery(token: string, query: string, page = 1, limit = 50) {
-    const tables = this.extractAndValidateTables(query);
-    const [tableName] = tables;
+    const tables = this.sqlParser.extractTableNames(query);
 
     try {
       const access = await this.permissionsService.checkAccess(token, tables);
@@ -40,22 +39,11 @@ export class QueryService {
         limit,
       );
 
-      return this.executeQuery(paginatedQuery, tableName);
+      return this.executeQuery(paginatedQuery, tables);
     } catch (error) {
       this.logger.error('Query execution failed', { error });
       throw error;
     }
-  }
-
-  private extractAndValidateTables(query: string): string[] {
-    const tables = this.sqlParser.extractTableNames(query);
-
-    if (tables.length > 1) {
-      this.logger.error('Multiple tables not supported');
-      throw new BadRequestException('Multiple tables not supported');
-    }
-
-    return tables;
   }
 
   private async transpileToTrino(query: string): Promise<string> {
@@ -74,7 +62,7 @@ export class QueryService {
     }
   }
 
-  private executeQuery(query: string, tableName: string) {
+  private executeQuery(query: string, tableName: string[]) {
     try {
       return this.queryEngine.runQuery(query, tableName);
     } catch (error) {

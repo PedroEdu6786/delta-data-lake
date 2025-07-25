@@ -19,7 +19,6 @@ This project consists of two microservices:
 ### 2. Microservice A
 - **Streamed Responses**: Added stream responses for query executions
 - **Limited Support**: For the moment just made sure to support mysql and postresql
-- **Single Query Execution**: Just supports for the moment simple select queries, avoided UNIONS and JOINS for complexity simplicity
 - **SQL Parsing**: Opted to use sqlglot for SQL parsing and validation, it's very easy to extend and customize. Mainly selected it because of the big complexity it can be to parse queries, no similar support on JS/TS.
 - **Improvements**: Migrate entirely to python for query parsing/validations, add support for more SQL dialects, add support for more complex queries (UNIONS, JOINS, etc.)
 

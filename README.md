@@ -8,7 +8,7 @@ This project consists of two microservices:
 - **Microservice A**: Data Lake explorer
 - **Microservice B**: Authentication, permissions and authorization service
 
-## BIG Design Decisions
+## BIG BOY Design Decisions
 
 ### 1. Shared Library (`@arkham/auth`)
 - **Code Reuse**: Common authentication logic shared between services

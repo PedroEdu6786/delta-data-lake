@@ -43,11 +43,11 @@ export class PermissionsService {
 
       return response;
     } catch (error) {
-      this.logger.error('Permission check failed', {
+      this.logger.error('Could not check permissions', {
         error: getErrorMessage(error),
       });
       throw new HttpException(
-        'Permission check failed',
+        'Could not check permissions',
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }

@@ -1,5 +1,6 @@
 import { spawn } from 'child_process';
 import { join } from 'path';
+import * as fs from 'fs';
 
 export interface PythonScriptResult {
   result?: any;
@@ -10,13 +11,28 @@ export class PythonScriptExecutor {
   private readonly pythonPath: string;
 
   constructor(venvPath?: string) {
+    const defaultVenvPath = join(
+      __dirname,
+      '..',
+      '..',
+      '..',
+      'scripts',
+      '.venv',
+      'bin',
+      'python',
+    );
     this.pythonPath =
-      venvPath ??
-      join(__dirname, '..', '..', '..', 'scripts', '.venv', 'bin', 'python');
+      venvPath && fs.existsSync(venvPath)
+        ? venvPath
+        : fs.existsSync(defaultVenvPath)
+          ? defaultVenvPath
+          : 'python3'; // fallback to system python
   }
-
-  async execute(scriptPath: string, input?: any): Promise<PythonScriptResult> {
-    const pyProcess = spawn(this.pythonPath, [scriptPath]);
+  async execute(
+    scriptPath: string[],
+    input?: any,
+  ): Promise<PythonScriptResult> {
+    const pyProcess = spawn(this.pythonPath, scriptPath);
 
     const outputChunks: Buffer[] = [];
     const errorChunks: Buffer[] = [];

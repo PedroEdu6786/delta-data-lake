@@ -12,6 +12,8 @@ services:
       MYSQL_PASSWORD: password
     volumes:
       - mysql_data:/var/lib/mysql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql # <--- Add this line
+
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       interval: 5s
@@ -24,6 +26,10 @@ services:
       dockerfile: microservice-a/Dockerfile
     ports:
       - "3000:3000"
+    env_file:
+      - .env
+    environment:
+      AWS_REGION: us-east-1
     volumes:
       - .:/app
     command: yarn --cwd microservice-a start:dev

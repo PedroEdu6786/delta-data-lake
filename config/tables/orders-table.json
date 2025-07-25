@@ -1,0 +1,23 @@
+{
+  "Name": "orders",
+  "Description": "Customer orders table",
+  "StorageDescriptor": {
+    "Columns": [
+      { "Name": "id", "Type": "string" },
+      { "Name": "userId", "Type": "string" },
+      { "Name": "total", "Type": "decimal(10,2)" },
+      { "Name": "status", "Type": "string" }
+    ],
+    "Location": "s3://pedro-arkham-athena-query/delta/orders",
+    "InputFormat": "io.delta.standalone.internal.data.DeltaInputFormat",
+    "OutputFormat": "io.delta.standalone.internal.data.DeltaOutputFormat",
+    "SerdeInfo": {
+      "SerializationLibrary": "org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe"
+    }
+  },
+  "TableType": "EXTERNAL_TABLE",
+  "Parameters": {
+    "EXTERNAL": "TRUE",
+    "table_type": "delta"
+  }
+}

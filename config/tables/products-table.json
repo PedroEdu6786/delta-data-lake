@@ -1,0 +1,23 @@
+{
+  "Name": "products",
+  "Description": "Product catalog table",
+  "StorageDescriptor": {
+    "Columns": [
+      { "Name": "id", "Type": "string" },
+      { "Name": "name", "Type": "string" },
+      { "Name": "price", "Type": "decimal(10,2)" },
+      { "Name": "description", "Type": "string" }
+    ],
+    "Location": "s3://pedro-arkham-athena-query/delta/products",
+    "InputFormat": "io.delta.standalone.internal.data.DeltaInputFormat",
+    "OutputFormat": "io.delta.standalone.internal.data.DeltaOutputFormat",
+    "SerdeInfo": {
+      "SerializationLibrary": "org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe"
+    }
+  },
+  "TableType": "EXTERNAL_TABLE",
+  "Parameters": {
+    "EXTERNAL": "TRUE",
+    "table_type": "delta"
+  }
+}

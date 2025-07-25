@@ -53,11 +53,42 @@ export class StreamingResponseInterceptor implements NestInterceptor {
           response.write(']}]');
           response.end();
         } catch (err) {
-          response.write(']}]');
+          // Add error info to the JSON response
+          response.write('], "error": {');
+          response.write(
+            `"message": ${JSON.stringify(err instanceof Error ? err.message : 'Unknown error')},`,
+          );
+          response.write(`"code": ${JSON.stringify(this.getErrorCode(err))},`);
+          response.write('}}]');
+
+          // Log the error with full context
+          console.error('Streaming error occurred:', {
+            error: err instanceof Error ? err.message : String(err),
+            stack: err instanceof Error ? err.stack : undefined,
+            timestamp: new Date().toISOString(),
+            page,
+            limit,
+          });
+
           response.end();
-          throw err;
         }
       }),
     );
+  }
+
+  private getErrorCode(err: any): string {
+    if (err instanceof Error) {
+      // You can add custom error codes here
+      switch (err.name) {
+        case 'ValidationError':
+          return '400';
+        case 'NotFoundException':
+          return '404';
+        // Add more error types and codes as needed
+        default:
+          return '500';
+      }
+    }
+    return '500';
   }
 }

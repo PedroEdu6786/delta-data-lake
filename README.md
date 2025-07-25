@@ -91,9 +91,9 @@ yarn seed
 
 ## API Endpoints
 
-### Microservice A (Port 3000)
-- `POST /auth/login` - User authentication
-- `GET /auth/profile` - Get user profile (protected)
-
 ### Microservice B (Port 3001)
-- `POST /permissions/check` - Check table permissions (protected)
+- `POST /auth/login` - User authentication
+- `POST /permissions/check` - Get user permissions for tables (protected)
+
+### Microservice A (Port 3000)
+- `GET /query` - Check table permissions (protected)

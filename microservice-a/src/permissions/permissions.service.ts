@@ -21,9 +21,8 @@ export class PermissionsService {
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
   ) {
     const baseUrl = config.get<string>('permissions.serviceUrl');
-    const timeout = config.get<number>('permissions.timeout');
 
-    this.httpClient = new GenericHttpClient(this.httpService, baseUrl, timeout);
+    this.httpClient = new GenericHttpClient(this.httpService, { baseUrl });
   }
 
   async checkAccess(

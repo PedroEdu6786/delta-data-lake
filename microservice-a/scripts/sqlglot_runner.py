@@ -4,7 +4,7 @@ import json
 from sqlglot import transpile, errors
 
 # Priority order for dialects, adjust if you expect more of one
-DIALECTS = ['mysql', 'postgres', 'tsql']
+DIALECTS = ['mysql', 'postgres']
 
 def to_trino_compatible(sql: str) -> str:
     """

@@ -4,7 +4,6 @@ WORKDIR /app
 
 # Copy workspace root and install deps using yarn workspaces
 COPY package.json yarn.lock ./
-COPY microservice-a ./microservice-a
 COPY microservice-b ./microservice-b
 COPY libs ./libs
 

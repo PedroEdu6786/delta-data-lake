@@ -6,14 +6,12 @@ export class UserSeeder {
   static async run(dataSource: DataSource): Promise<void> {
     const userRepository = dataSource.getRepository(User);
 
-    // Check if users already exist
     const existingUsers = await userRepository.count();
     if (existingUsers > 0) {
       console.log('Users already exist, skipping user seeding');
       return;
     }
 
-    // Hash passwords
     const saltRounds = 10;
     const adminPassword = await bcrypt.hash('admin123', saltRounds);
     const employeePassword = await bcrypt.hash('employee123', saltRounds);

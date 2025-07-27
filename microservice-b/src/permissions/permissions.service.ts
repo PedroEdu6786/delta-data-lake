@@ -41,12 +41,9 @@ export class PermissionsService {
   }
 
   private async getValidTables(tableNames: string[]): Promise<TableEntity[]> {
-    const tables = await Promise.all(
-      tableNames.map((name) =>
-        this.tableRepository.findOne({ where: { name } }),
-      ),
-    );
-    return tables.filter((table) => !!table);
+    return this.tableRepository.find({
+      where: { name: In(tableNames) },
+    });
   }
 
   private async getUserPermissions(

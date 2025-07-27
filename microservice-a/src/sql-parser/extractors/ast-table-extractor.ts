@@ -36,35 +36,20 @@ export class AstTableExtractor implements TableExtractor {
 
   private extractTablesFromAst(ast: AST | AST[]): string[] {
     const tables = new Set<string>();
+    const MAX_DEPTH = 50; // AVOID CIRCULAR REFERENCE
 
-    const walk = (node: unknown): void => {
-      if (
-        !node ||
-        typeof node !== 'object' ||
-        'column' in node ||
-        'with' in node
-      )
+    const walk = (node: unknown, depth = 0): void => {
+      if (depth > MAX_DEPTH || this.shouldSkipNode(node)) {
         return;
+      }
 
       const obj = node as Record<string, unknown>;
 
-      // Handle nodes with a table and optional alias
       if ('table' in obj && typeof obj.table === 'string') {
-        // This ensures we only add actual table names, not aliases
         tables.add(obj.table);
       }
 
-      // Dive deeper into nested structures
-      for (const key in obj) {
-        if (Object.prototype.hasOwnProperty.call(obj, key)) {
-          const value = obj[key];
-          if (Array.isArray(value)) {
-            value.forEach(walk);
-          } else if (typeof value === 'object' && value !== null) {
-            walk(value);
-          }
-        }
-      }
+      this.traverseNestedPropertiesWithDepth(obj, walk, depth + 1);
     };
 
     if (Array.isArray(ast)) {
@@ -74,5 +59,37 @@ export class AstTableExtractor implements TableExtractor {
     }
 
     return [...tables];
+  }
+
+  private shouldSkipNode(node: unknown): boolean {
+    if (!node || typeof node !== 'object') {
+      return true;
+    }
+
+    // Skip column references and WITH clauses as they cause conflicts with table names
+    const obj = node as Record<string, unknown>;
+    return 'column' in obj || 'with' in obj;
+  }
+
+  private traverseNestedPropertiesWithDepth(
+    obj: Record<string, unknown>,
+    walkFn: (node: unknown, depth: number) => void,
+    depth: number,
+  ): void {
+    for (const key of Object.keys(obj)) {
+      const value = obj[key];
+
+      if (Array.isArray(value)) {
+        // Process each item in arrays (e.g., FROM clauses, JOIN clauses)
+        value.forEach((item) => walkFn(item, depth));
+      } else if (this.isObject(value)) {
+        // Process nested objects (e.g., subqueries, WHERE conditions)
+        walkFn(value, depth);
+      }
+    }
+  }
+
+  private isObject(value: unknown): value is Record<string, unknown> {
+    return typeof value === 'object' && value !== null;
   }
 }

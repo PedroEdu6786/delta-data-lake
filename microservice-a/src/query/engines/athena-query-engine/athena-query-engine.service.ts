@@ -43,16 +43,7 @@ export class AthenaQueryEngineService implements QueryEngine {
     tableName: string[],
   ): AsyncGenerator<Record<string, any>, void> {
     try {
-      for (const table of tableName) {
-        const tableExists = await this.tableValidator.validateTableExists(
-          this.athenaDatabase,
-          table,
-        );
-
-        if (!tableExists) {
-          throw new NotFoundException(`Table "${table}" does not exist`);
-        }
-      }
+      await this.validateAllTablesExist(tableName);
 
       const queryId = await this.executeQuery(query);
       await this.waitForQueryCompletion(queryId);
@@ -166,5 +157,20 @@ export class AthenaQueryEngineService implements QueryEngine {
       },
       {} as Record<string, any>,
     );
+  }
+
+  private async validateAllTablesExist(tableNames: string[]): Promise<void> {
+    const validationPromises = tableNames.map(async (table) => {
+      const exists = await this.tableValidator.validateTableExists(
+        this.athenaDatabase,
+        table,
+      );
+
+      if (!exists) {
+        throw new NotFoundException(`Table "${table}" does not exist`);
+      }
+    });
+
+    await Promise.all(validationPromises);
   }
 }

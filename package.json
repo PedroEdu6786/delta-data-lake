@@ -8,7 +8,10 @@
     "start:a": "yarn workspace @arkham/auth build && yarn workspace microservice-a start:local",
     "start:b": "yarn workspace @arkham/auth build && yarn workspace microservice-b start:local",
     "start:all": "concurrently \"yarn workspace microservice-a start:local\" \"yarn workspace microservice-b start:local\"",
-    "docker:start": "docker-compose up --build"
+    "docker:start": "docker-compose up --build",
+    "test:a": "yarn workspace microservice-a test",
+    "test:a:watch": "yarn workspace microservice-a test:watch",
+    "test:a:cov": "yarn workspace microservice-a test:cov"
   },
   "workspaces": [
     "libs/*",

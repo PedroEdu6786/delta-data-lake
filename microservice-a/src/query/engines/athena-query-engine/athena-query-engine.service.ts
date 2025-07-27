@@ -150,13 +150,10 @@ export class AthenaQueryEngineService implements QueryEngine {
     const values = row?.Data?.map((d) => d.VarCharValue ?? null);
     if (!values) return null;
 
-    return headers.reduce(
-      (acc, header, idx) => {
-        acc[header] = values[idx];
-        return acc;
-      },
-      {} as Record<string, any>,
-    );
+    return headers.reduce((acc, header, idx) => {
+      acc[header] = values[idx];
+      return acc;
+    }, {});
   }
 
   private async validateAllTablesExist(tableNames: string[]): Promise<void> {

@@ -1,3 +1,5 @@
 export interface SqlTranspiler {
-  toTrino(sql: string): Promise<{ result?: string; error?: string }>;
+  transpile(sql: string): Promise<{ result?: string; error?: string }>;
 }
+
+export const SQL_TRANSPILER = Symbol('SQL_TRANSPILER');

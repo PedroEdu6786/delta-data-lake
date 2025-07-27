@@ -3,18 +3,19 @@ import { QueryController } from './query.controller';
 import { QueryService } from './query.service';
 import { AthenaQueryEngineService } from './engines/athena-query-engine/athena-query-engine.service';
 import { QUERY_ENGINE } from './types/query-engine.interface';
-import { SqlParserService } from '../sql-parser/sql-parser.service';
+import { SqlParserModule } from '../sql-parser/sql-parser.module';
 import { PermissionsModule } from 'src/permissions/permissions.module';
 import { AwsClientFactory } from './engines/athena-query-engine/factories/aws-client.factory';
 import { TableValidatorService } from './engines/athena-query-engine/services/table-validator.service';
 import { AthenaErrorHandlerService } from './engines/athena-query-engine/services/athena-error-handler.service';
+import { PythonSqlTranspiler } from 'src/sql-parser/transpilers/python-sql-transpiler';
+import { SQL_TRANSPILER } from 'src/sql-parser/interfaces/sql-transpiler.interface';
 
 @Module({
-  imports: [PermissionsModule],
+  imports: [PermissionsModule, SqlParserModule],
   controllers: [QueryController],
   providers: [
     QueryService,
-    SqlParserService,
     AwsClientFactory,
     AthenaErrorHandlerService,
     {
@@ -28,6 +29,11 @@ import { AthenaErrorHandlerService } from './engines/athena-query-engine/service
     {
       provide: QUERY_ENGINE,
       useClass: AthenaQueryEngineService,
+    },
+    PythonSqlTranspiler,
+    {
+      provide: SQL_TRANSPILER,
+      useClass: PythonSqlTranspiler,
     },
   ],
   exports: [QueryService],
